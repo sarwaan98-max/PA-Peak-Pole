@@ -143,7 +143,7 @@ textarea{resize:vertical;min-height:80px}
 <div class="nav">
   <button class="nav-tab active" data-tab="survey" onclick="switchTab('survey')">&#x1F4CB; Survey</button>
   <button class="nav-tab" data-tab="results" onclick="switchTab('results')">&#x1F4CA; Results</button>
-  <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">&#x2699;&#xFE0F; Settings</button>
+  <!-- settings tab hidden -->
 </div>
 
 <!-- ═══ SURVEY ═══ -->
@@ -247,13 +247,7 @@ textarea{resize:vertical;min-height:80px}
     <span id="cfgUrlStatus" style="margin-left:12px;font-size:12px"></span>
   </div>
 
-  <div class="section">
-    <div class="section-title">Admin PIN</div>
-    <p class="section-desc">Protects the Results tab. Default: <code style="color:var(--pri)">1234</code></p>
-    <div class="input-group"><label>New PIN</label><input type="text" id="cfgPin" maxlength="6" placeholder="Enter new PIN"></div>
-    <button class="btn btn-pri btn-sm" onclick="saveCfgPin()">&#x1F511; Update PIN</button>
-    <span id="cfgPinStatus" style="margin-left:12px;font-size:12px"></span>
-  </div>
+  
 
   <div class="section">
     <div class="section-title">Google Sheet ID <span class="badge">For Results</span></div>
@@ -301,7 +295,7 @@ function sGet(k, fb) { try { var v = localStorage.getItem('pp_' + k); return v !
 function sSet(k, v) { _store[k] = v; try { localStorage.setItem('pp_' + k, v); } catch(e) { /* sandboxed */ } }
 
 // ── Config ──
-var adminPin = sGet('pin', '1234');
+var adminPin = '19991';
 var gasUrl = sGet('gasUrl', 'https://script.google.com/macros/s/AKfycbzx3blSTiuULtLkYF7-StAcogQWyhblyzU_SO-UhBe1Eh-PM0Chyeb7mUFBylD_V667AQ/exec');
 var sheetId = sGet('sheetId', '1DXl-bDPdkhoXWOF-dtDHcocjwSsfUdMY7zWQ98jQwaw');
 var resultsUnlocked = false;
@@ -367,13 +361,7 @@ function saveCfgUrl() {
   document.getElementById('cfgUrlStatus').innerHTML = '<span style="color:var(--ok)">&#x2713; Saved</span>';
   if (gasUrl) document.getElementById('setupBanner').style.display = 'none';
 }
-function saveCfgPin() {
-  var p = document.getElementById('cfgPin').value.trim();
-  if (p.length < 2) { document.getElementById('cfgPinStatus').innerHTML = '<span style="color:var(--err)">Min 2 chars</span>'; return; }
-  adminPin = p;
-  sSet('pin', adminPin);
-  document.getElementById('cfgPinStatus').innerHTML = '<span style="color:var(--ok)">&#x2713; Updated</span>';
-}
+
 function saveCfgSheet() {
   sheetId = document.getElementById('cfgSheet').value.trim();
   sSet('sheetId', sheetId);
