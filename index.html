@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DTW5 Peak Preferences Poll</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-card-hover: #222636;
+  --bg-input: #12141c;
+  --border: #2a2e3d;
+  --border-light: #1e2230;
+  --text: #e8e8f0;
+  --text-sec: #9a9ab0;
+  --text-mut: #6b6b82;
+  --pri: #7c6aff;
+  --pri-dim: rgba(124,106,255,0.15);
+  --pri-glow: rgba(124,106,255,0.35);
+  --ok: #4ade80;
+  --ok-dim: rgba(74,222,128,0.12);
+  --err: #ff6b6b;
+  --warn: #fbbf24;
+  --warn-dim: rgba(251,191,36,0.12);
+  --info: #60a5fa;
+  --info-dim: rgba(96,165,250,0.12);
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'SF Mono','Consolas', monospace;
+  --rad: 12px;
+  --radsm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+
+/* Toast */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:var(--radsm);font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.success{background:var(--ok-dim);color:var(--ok);border:1px solid rgba(74,222,128,0.3)}
+.toast.error{background:rgba(255,107,107,0.12);color:var(--err);border:1px solid rgba(255,107,107,0.3)}
+
+/* Setup Banner */
+.setup-banner{background:var(--warn-dim);border:1px solid rgba(251,191,36,0.25);border-radius:var(--rad);padding:14px 18px;margin:16px auto;max-width:680px;font-size:13px;color:var(--warn);display:flex;align-items:center;gap:10px}
+.setup-banner svg{flex-shrink:0}
+
+/* Nav */
+.nav{display:flex;justify-content:center;gap:4px;padding:16px 16px 0;border-bottom:1px solid var(--border-light)}
+.nav-tab{padding:10px 24px;font-size:13px;font-weight:600;color:var(--text-mut);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:var(--font);transition:all .2s}
+.nav-tab:hover{color:var(--text-sec)}
+.nav-tab.active{color:var(--pri);border-bottom-color:var(--pri)}
+
+/* Pages */
+.page{display:none;max-width:680px;margin:0 auto;padding:24px 16px 48px}
+.page.active{display:block}
+
+h1{font-size:24px;font-weight:700;margin-bottom:4px}
+.subtitle{color:var(--text-sec);font-size:14px;margin-bottom:24px}
+
+/* Section Card */
+.section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rad);padding:20px;margin-bottom:20px}
+.section-title{font-size:15px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.badge{font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:var(--pri-dim);color:var(--pri)}
+.section-desc{font-size:13px;color:var(--text-sec);margin-bottom:14px}
+
+/* Rank Items */
+.rank-list{list-style:none}
+.rank-item{display:flex;align-items:center;gap:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radsm);padding:12px 16px;margin-bottom:8px;cursor:grab;transition:all .15s;user-select:none}
+.rank-item:hover{background:var(--bg-card-hover);border-color:var(--pri)}
+.rank-item.dragging{opacity:.4;border-color:var(--pri);box-shadow:0 0 16px var(--pri-glow)}
+.rank-num{width:28px;height:28px;border-radius:50%;background:var(--pri-dim);color:var(--pri);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.rank-label{font-size:14px;font-weight:500;flex:1}
+.rank-times{font-size:12px;color:var(--text-mut)}
+.drag-handle{color:var(--text-mut);font-size:12px;letter-spacing:2px}
+
+/* Form */
+.input-group{margin-bottom:14px}
+.input-group label{display:block;font-size:13px;font-weight:600;color:var(--text-sec);margin-bottom:6px}
+input[type="text"],textarea{width:100%;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radsm);color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border .2s}
+input[type="text"]:focus,textarea:focus{border-color:var(--pri)}
+textarea{resize:vertical;min-height:80px}
+
+/* Buttons */
+.btn{padding:12px 24px;border-radius:var(--radsm);font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-pri{background:var(--pri);color:#fff}
+.btn-pri:hover{background:#6b58e6;transform:translateY(-1px);box-shadow:0 4px 16px var(--pri-glow)}
+.btn-pri:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none}
+.btn-sec{background:var(--bg-card-hover);color:var(--text);border:1px solid var(--border)}
+.btn-sec:hover{border-color:var(--pri)}
+.btn-sm{padding:8px 16px;font-size:12px}
+
+/* Success */
+.success-screen{text-align:center;padding:60px 20px;display:none}
+.check-circle{width:80px;height:80px;border-radius:50%;background:var(--ok-dim);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:20px}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;justify-content:center;align-items:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rad);padding:28px;width:340px;text-align:center}
+.modal h3{margin-bottom:6px;font-size:18px}
+.modal p{color:var(--text-sec);font-size:13px;margin-bottom:18px}
+.modal input{text-align:center;font-size:22px;letter-spacing:8px;font-family:var(--mono)}
+.modal .err-msg{color:var(--err);font-size:12px;margin-top:8px;min-height:18px}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radsm);padding:16px;text-align:center}
+.stat-val{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--pri)}
+.stat-lbl{font-size:11px;color:var(--text-mut);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+
+/* Table */
+.rtable{width:100%;border-collapse:collapse;font-size:13px}
+.rtable th{text-align:left;color:var(--text-mut);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.rtable td{padding:10px 12px;border-bottom:1px solid var(--border-light)}
+.rtable tr:hover td{background:var(--bg-card-hover)}
+
+/* Bars */
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.bar-label{width:80px;text-align:right;font-size:13px;font-weight:600}
+.bar-wrap{flex:1;height:26px;background:var(--bg-input);border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.bar-val{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:#fff;font-family:var(--mono)}
+.dist-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.dist-label{width:80px;font-size:12px;color:var(--text-sec);text-align:right;flex-shrink:0}
+.dist-wrap{flex:1;height:20px;background:var(--bg-input);border-radius:4px;overflow:hidden}
+.dist-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.dist-count{width:30px;font-size:12px;color:var(--text-mut);font-family:var(--mono)}
+
+.chip{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* Responsive */
+@media(max-width:600px){h1{font-size:20px}.nav-tab{padding:8px 14px;font-size:12px}.stats-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="setup-banner" id="setupBanner" style="display:none">
+  <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.305 13.75a1.123 1.123 0 0 0 .98 1.69h13.43c.884 0 1.395-.95.98-1.69L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+  <div><strong>Setup required:</strong> Go to <span style="text-decoration:underline;cursor:pointer" onclick="switchTab('settings')">Settings</span> to configure the Google Apps Script backend.</div>
+</div>
+
+<div class="nav">
+  <button class="nav-tab active" data-tab="survey" onclick="switchTab('survey')">&#x1F4CB; Survey</button>
+  <button class="nav-tab" data-tab="results" onclick="switchTab('results')">&#x1F4CA; Results</button>
+  <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">&#x2699;&#xFE0F; Settings</button>
+</div>
+
+<!-- ═══ SURVEY ═══ -->
+<div class="page active" id="page-survey">
+  <div id="surveyForm">
+    <h1>&#x1F4C5; Peak Preferences Poll</h1>
+    <p class="subtitle">Drag to rank your preferences — #1 = most preferred</p>
+
+    <div class="section">
+      <div class="input-group">
+        <label>Your Name / Alias</label>
+        <input type="text" id="respName" placeholder="e.g. sarwsidd">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Shift Preference <span class="badge">Rank 1–4</span></div>
+      <p class="section-desc">Drag to reorder. #1 = your most preferred shift.</p>
+      <ul class="rank-list" id="shiftRank">
+        <li class="rank-item" draggable="true" data-value="Mor/Day"><span class="drag-handle">⠿</span><span class="rank-num">1</span><span class="rank-label">Morning / Day</span><span class="rank-times">~6:00a – 4:30p</span></li>
+        <li class="rank-item" draggable="true" data-value="Day/Twi"><span class="drag-handle">⠿</span><span class="rank-num">2</span><span class="rank-label">Day / Twilight</span><span class="rank-times">~12:00p – 10:30p</span></li>
+        <li class="rank-item" draggable="true" data-value="Twi/Nit"><span class="drag-handle">⠿</span><span class="rank-num">3</span><span class="rank-label">Twilight / Night</span><span class="rank-times">~6:00p – 4:30a</span></li>
+        <li class="rank-item" draggable="true" data-value="Nit/Mor"><span class="drag-handle">⠿</span><span class="rank-num">4</span><span class="rank-label">Night / Morning</span><span class="rank-times">~12:00a – 10:30a</span></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Extra Day Off Preference <span class="badge">Rank 1–3</span></div>
+      <p class="section-desc">Drag to reorder. #1 = your most preferred extra day off.</p>
+      <ul class="rank-list" id="dayOffRank">
+        <li class="rank-item" draggable="true" data-value="Sunday"><span class="drag-handle">⠿</span><span class="rank-num">1</span><span class="rank-label">Sunday</span></li>
+        <li class="rank-item" draggable="true" data-value="Monday"><span class="drag-handle">⠿</span><span class="rank-num">2</span><span class="rank-label">Monday</span></li>
+        <li class="rank-item" draggable="true" data-value="Tuesday"><span class="drag-handle">⠿</span><span class="rank-num">3</span><span class="rank-label">Tuesday</span></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="input-group">
+        <label>Notes (optional)</label>
+        <textarea id="respNotes" placeholder="Any preferences, constraints, or comments..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-pri" id="submitBtn" onclick="submitSurvey()">&#x1F4E8; Submit Response</button>
+  </div>
+
+  <div id="successScreen" class="success-screen">
+    <div class="check-circle">&#x2713;</div>
+    <h2>Response Submitted!</h2>
+    <p style="color:var(--text-sec);font-size:14px">Your peak preferences have been recorded.</p>
+    <br>
+    <button class="btn btn-sec" onclick="resetSurvey()">&#x21BA; Submit Another Response</button>
+  </div>
+</div>
+
+<!-- ═══ RESULTS ═══ -->
+<div class="page" id="page-results">
+  <div class="modal-overlay" id="pinModal">
+    <div class="modal">
+      <h3 style="color:var(--pri)">&#x1F512; Admin Access</h3>
+      <p>Enter the admin PIN to view results</p>
+      <input type="text" id="pinInput" maxlength="6" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;" autocomplete="off">
+      <div class="err-msg" id="pinError"></div>
+      <br><br>
+      <button class="btn btn-pri" onclick="checkPin()" style="width:100%">Unlock</button>
+    </div>
+  </div>
+
+  <div id="resultsContent" style="display:none">
+    <h1>&#x1F4CA; Results Dashboard</h1>
+    <p class="subtitle">Aggregated responses from the team</p>
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="btn btn-sec btn-sm" onclick="refreshResults()">&#x21BB; Refresh</button>
+      <button class="btn btn-sec btn-sm" onclick="exportCSV()">&#x2B07; Export CSV</button>
+      <button class="btn btn-sec btn-sm" onclick="lockResults()">&#x1F512; Lock</button>
+    </div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="section"><div class="section-title">Shift Preference — Average Rankings</div><p class="section-desc">Lower = more preferred (1 = top choice)</p><div id="shiftAvgChart"></div></div>
+    <div class="section"><div class="section-title">Shift — #1 Pick Distribution</div><div id="shiftDistChart" style="margin-top:12px"></div></div>
+    <div class="section"><div class="section-title">Day Off — Average Rankings</div><p class="section-desc">Lower = more preferred</p><div id="dayoffAvgChart"></div></div>
+    <div class="section"><div class="section-title">Day Off — #1 Pick Distribution</div><div id="dayoffDistChart" style="margin-top:12px"></div></div>
+    <div class="section">
+      <div class="section-title">Individual Responses</div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table class="rtable"><thead><tr><th>Name</th><th>Shift #1</th><th>Shift #2</th><th>Shift #3</th><th>Shift #4</th><th>Day #1</th><th>Day #2</th><th>Day #3</th><th>Notes</th><th>Time</th></tr></thead><tbody id="respBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="page" id="page-settings">
+  <h1>&#x2699;&#xFE0F; Settings</h1>
+  <p class="subtitle">Configure your poll backend</p>
+
+  <div class="section">
+    <div class="section-title">Google Apps Script URL</div>
+    <p class="section-desc">Deploy the Apps Script (see instructions below), then paste the Web App URL here.</p>
+    <div class="input-group"><label>Web App URL</label><input type="text" id="cfgUrl" placeholder="https://script.google.com/macros/s/.../exec"></div>
+    <button class="btn btn-pri btn-sm" onclick="saveCfgUrl()">&#x2713; Save URL</button>
+    <span id="cfgUrlStatus" style="margin-left:12px;font-size:12px"></span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Admin PIN</div>
+    <p class="section-desc">Protects the Results tab. Default: <code style="color:var(--pri)">1234</code></p>
+    <div class="input-group"><label>New PIN</label><input type="text" id="cfgPin" maxlength="6" placeholder="Enter new PIN"></div>
+    <button class="btn btn-pri btn-sm" onclick="saveCfgPin()">&#x1F511; Update PIN</button>
+    <span id="cfgPinStatus" style="margin-left:12px;font-size:12px"></span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Google Sheet ID <span class="badge">For Results</span></div>
+    <p class="section-desc">The ID from your Sheet URL (between /d/ and /edit). Needed for loading results.</p>
+    <div class="input-group"><label>Sheet ID</label><input type="text" id="cfgSheet" placeholder="e.g. 1aBcDeFgHiJk..."></div>
+    <button class="btn btn-pri btn-sm" onclick="saveCfgSheet()">&#x2713; Save Sheet ID</button>
+    <span id="cfgSheetStatus" style="margin-left:12px;font-size:12px"></span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">&#x1F4D6; Setup Instructions</div>
+    <div style="font-size:13px;color:var(--text-sec);line-height:1.7">
+      <p><strong>1.</strong> Create a new Google Sheet. Name it "Peak Preferences".</p>
+      <p><strong>2.</strong> Go to <strong>Extensions → Apps Script</strong>.</p>
+      <p><strong>3.</strong> Paste the script below and save.</p>
+      <p><strong>4.</strong> Click <strong>Deploy → New deployment → Web app</strong>.</p>
+      <p style="padding-left:16px">• Execute as: <strong>Me</strong></p>
+      <p style="padding-left:16px">• Who has access: <strong>Anyone</strong></p>
+      <p><strong>5.</strong> Copy the Web App URL → paste above.</p>
+      <p><strong>6.</strong> Share the Google Sheet as <strong>"Anyone with link → Viewer"</strong>.</p>
+      <p><strong>7.</strong> Copy the Sheet ID from the URL → paste above.</p>
+      <p><strong>8.</strong> Host this HTML on <strong>GitHub Pages</strong> (or any HTTPS host) and share on Slack.</p>
+      <br>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:12px;color:var(--text);white-space:pre;font-family:var(--mono)">function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['Timestamp','Name','Shift_1','Shift_2','Shift_3','Shift_4','DayOff_1','DayOff_2','DayOff_3','Notes']);
+  }
+  sheet.appendRow(data.values);
+  return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput('Poll backend is running.').setMimeType(ContentService.MimeType.TEXT);
+}</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Safe storage (localStorage may be blocked in sandboxed iframes) ──
+var _store = {};
+function sGet(k, fb) { try { var v = localStorage.getItem('pp_' + k); return v !== null ? v : fb; } catch(e) { return _store[k] !== undefined ? _store[k] : fb; } }
+function sSet(k, v) { _store[k] = v; try { localStorage.setItem('pp_' + k, v); } catch(e) { /* sandboxed */ } }
+
+// ── Config ──
+var adminPin = sGet('pin', '1234');
+var gasUrl = sGet('gasUrl', 'https://script.google.com/macros/s/AKfycbzx3blSTiuULtLkYF7-StAcogQWyhblyzU_SO-UhBe1Eh-PM0Chyeb7mUFBylD_V667AQ/exec');
+var sheetId = sGet('sheetId', '1DXl-bDPdkhoXWOF-dtDHcocjwSsfUdMY7zWQ98jQwaw');
+var resultsUnlocked = false;
+var allResponses = [];
+
+// ── Toast (replaces alert) ──
+var _toastTimer;
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || 'success') + ' show';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+// ── Tabs ──
+function switchTab(tab) {
+  var tabs = document.querySelectorAll('.nav-tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+  var sel = document.querySelector('.nav-tab[data-tab="' + tab + '"]');
+  if (sel) sel.classList.add('active');
+  var pg = document.getElementById('page-' + tab);
+  if (pg) pg.classList.add('active');
+  if (tab === 'results') {
+    if (!resultsUnlocked) {
+      document.getElementById('pinModal').classList.add('active');
+      document.getElementById('resultsContent').style.display = 'none';
+      setTimeout(function() { document.getElementById('pinInput').focus(); }, 150);
+    } else { refreshResults(); }
+  }
+}
+
+// ── PIN ──
+function checkPin() {
+  var val = document.getElementById('pinInput').value;
+  if (val === adminPin) {
+    resultsUnlocked = true;
+    document.getElementById('pinModal').classList.remove('active');
+    document.getElementById('resultsContent').style.display = 'block';
+    refreshResults();
+  } else {
+    document.getElementById('pinError').textContent = 'Incorrect PIN.';
+    document.getElementById('pinInput').value = '';
+  }
+}
+function lockResults() {
+  resultsUnlocked = false;
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('resultsContent').style.display = 'none';
+  document.getElementById('pinModal').classList.add('active');
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('pinModal').classList.contains('active')) checkPin();
+});
+
+// ── Settings saves ──
+function saveCfgUrl() {
+  gasUrl = document.getElementById('cfgUrl').value.trim();
+  sSet('gasUrl', gasUrl);
+  document.getElementById('cfgUrlStatus').innerHTML = '<span style="color:var(--ok)">&#x2713; Saved</span>';
+  if (gasUrl) document.getElementById('setupBanner').style.display = 'none';
+}
+function saveCfgPin() {
+  var p = document.getElementById('cfgPin').value.trim();
+  if (p.length < 2) { document.getElementById('cfgPinStatus').innerHTML = '<span style="color:var(--err)">Min 2 chars</span>'; return; }
+  adminPin = p;
+  sSet('pin', adminPin);
+  document.getElementById('cfgPinStatus').innerHTML = '<span style="color:var(--ok)">&#x2713; Updated</span>';
+}
+function saveCfgSheet() {
+  sheetId = document.getElementById('cfgSheet').value.trim();
+  sSet('sheetId', sheetId);
+  document.getElementById('cfgSheetStatus').innerHTML = '<span style="color:var(--ok)">&#x2713; Saved</span>';
+}
+
+// ── Drag-to-Rank ──
+function initDrag(listId) {
+  var list = document.getElementById(listId);
+  if (!list) return;
+  var dragItem = null;
+
+  list.addEventListener('dragstart', function(e) {
+    dragItem = e.target.closest('.rank-item');
+    if (dragItem) dragItem.classList.add('dragging');
+  });
+  list.addEventListener('dragend', function() {
+    if (dragItem) dragItem.classList.remove('dragging');
+    dragItem = null;
+    renum(listId);
+  });
+  list.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    var after = getAfter(list, e.clientY);
+    var d = list.querySelector('.dragging');
+    if (!d) return;
+    if (!after) list.appendChild(d); else list.insertBefore(d, after);
+  });
+
+  // Touch
+  var tItem = null;
+  list.addEventListener('touchstart', function(e) {
+    tItem = e.target.closest('.rank-item');
+    if (tItem) tItem.classList.add('dragging');
+  }, {passive: true});
+  list.addEventListener('touchmove', function(e) {
+    if (!tItem) return;
+    e.preventDefault();
+    var after = getAfter(list, e.touches[0].clientY);
+    if (!after) list.appendChild(tItem); else list.insertBefore(tItem, after);
+  }, {passive: false});
+  list.addEventListener('touchend', function() {
+    if (tItem) { tItem.classList.remove('dragging'); tItem = null; }
+    renum(listId);
+  });
+}
+
+function getAfter(container, y) {
+  var items = container.querySelectorAll('.rank-item:not(.dragging)');
+  var closest = null, closestOffset = Number.NEGATIVE_INFINITY;
+  for (var i = 0; i < items.length; i++) {
+    var box = items[i].getBoundingClientRect();
+    var offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closestOffset) { closestOffset = offset; closest = items[i]; }
+  }
+  return closest;
+}
+
+function renum(listId) {
+  var items = document.getElementById(listId).querySelectorAll('.rank-item');
+  for (var i = 0; i < items.length; i++) items[i].querySelector('.rank-num').textContent = i + 1;
+}
+
+// ── Submit ──
+function getOrder(listId) {
+  var items = document.getElementById(listId).querySelectorAll('.rank-item');
+  var out = [];
+  for (var i = 0; i < items.length; i++) out.push(items[i].getAttribute('data-value'));
+  return out;
+}
+
+function submitSurvey() {
+  var name = document.getElementById('respName').value.trim();
+  if (!name) { showToast('Please enter your name or alias.', 'error'); return; }
+  var shifts = getOrder('shiftRank');
+  var dayoffs = getOrder('dayOffRank');
+  var notes = document.getElementById('respNotes').value.trim();
+  var ts = new Date().toLocaleString();
+  var row = [ts, name].concat(shifts).concat(dayoffs).concat([notes]);
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  if (gasUrl) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', gasUrl, true);
+      xhr.setRequestHeader('Content-Type', 'text/plain');
+      xhr.send(JSON.stringify({values: row}));
+    } catch(e) { /* no-op */ }
+  }
+
+  // Always save locally too
+  var local = JSON.parse(sGet('responses', '[]'));
+  local.push(row);
+  sSet('responses', JSON.stringify(local));
+
+  btn.disabled = false;
+  btn.textContent = '\u{1F4E8} Submit Response';
+  document.getElementById('surveyForm').style.display = 'none';
+  document.getElementById('successScreen').style.display = 'block';
+}
+
+function resetSurvey() {
+  document.getElementById('surveyForm').style.display = 'block';
+  document.getElementById('successScreen').style.display = 'none';
+  document.getElementById('respName').value = '';
+  document.getElementById('respNotes').value = '';
+}
+
+// ── Results ──
+function refreshResults() {
+  allResponses = [];
+
+  // Try loading from Google Sheet via gviz CSV
+  if (sheetId) {
+    try {
+      var xhr = new XMLHttpRequest();
+      var csvUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:csv';
+      xhr.open('GET', csvUrl, false); // sync for simplicity in preview
+      xhr.send();
+      if (xhr.status === 200) {
+        var rows = parseCSV(xhr.responseText);
+        if (rows.length > 1) {
+          for (var i = 1; i < rows.length; i++) {
+            allResponses.push(rows[i].map(function(c) { return c.replace(/^"|"$/g, ''); }));
+          }
+        }
+      }
+    } catch(e) { /* CORS or network error - ignore */ }
+  }
+
+  // Also pull local
+  var local = JSON.parse(sGet('responses', '[]'));
+  allResponses = allResponses.concat(local);
+  renderResults();
+}
+
+function parseCSV(text) {
+  var rows = [], current = [], field = '', inQ = false;
+  for (var i = 0; i < text.length; i++) {
+    var c = text[i];
+    if (inQ) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++; }
+      else if (c === '"') inQ = false;
+      else field += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { current.push(field); field = ''; }
+      else if (c === '\n' || (c === '\r' && text[i+1] === '\n')) {
+        current.push(field); field = ''; rows.push(current); current = [];
+        if (c === '\r') i++;
+      } else field += c;
+    }
+  }
+  if (field || current.length) { current.push(field); rows.push(current); }
+  return rows;
+}
+
+function renderResults() {
+  var n = allResponses.length;
+  document.getElementById('statsGrid').innerHTML =
+    '<div class="stat-card"><div class="stat-val">' + n + '</div><div class="stat-lbl">Responses</div></div>' +
+    '<div class="stat-card"><div class="stat-val">' + (n > 0 ? allResponses[n-1][1] : '\u2014') + '</div><div class="stat-lbl">Latest</div></div>';
+
+  if (n === 0) {
+    document.getElementById('shiftAvgChart').innerHTML = '<p style="color:var(--text-mut);font-size:13px">No responses yet.</p>';
+    document.getElementById('shiftDistChart').innerHTML = '';
+    document.getElementById('dayoffAvgChart').innerHTML = '';
+    document.getElementById('dayoffDistChart').innerHTML = '';
+    document.getElementById('respBody').innerHTML = '';
+    return;
+  }
+
+  var shifts = ['Mor/Day','Day/Twi','Twi/Nit','Nit/Mor'];
+  var days = ['Sunday','Monday','Tuesday'];
+  var colors = ['#7c6aff','#60a5fa','#4ade80','#fbbf24'];
+
+  // Shift averages
+  var sSum = {}, sFirst = {};
+  shifts.forEach(function(s) { sSum[s] = 0; sFirst[s] = 0; });
+  allResponses.forEach(function(r) {
+    for (var i = 0; i < 4; i++) { var v = (r[2+i]||'').trim(); if (sSum[v] !== undefined) sSum[v] += (i+1); if (i === 0 && sFirst[v] !== undefined) sFirst[v]++; }
+  });
+  var sAvg = shifts.map(function(s) { return {name:s, avg:(sSum[s]/n).toFixed(2)}; });
+  sAvg.sort(function(a,b) { return a.avg - b.avg; });
+
+  document.getElementById('shiftAvgChart').innerHTML = sAvg.map(function(s,i) {
+    return '<div class="bar-row"><span class="bar-label">' + s.name + '</span><div class="bar-wrap"><div class="bar-fill" style="width:' + ((1-(s.avg-1)/3)*100) + '%;background:' + colors[i] + '"></div><span class="bar-val">' + s.avg + '</span></div></div>';
+  }).join('');
+
+  document.getElementById('shiftDistChart').innerHTML = shifts.map(function(s,i) {
+    return '<div class="dist-row"><span class="dist-label">' + s + '</span><div class="dist-wrap"><div class="dist-fill" style="width:' + (n>0?(sFirst[s]/n*100):0) + '%;background:' + colors[i] + '"></div></div><span class="dist-count">' + sFirst[s] + '</span></div>';
+  }).join('');
+
+  // Day off averages
+  var dSum = {}, dFirst = {};
+  days.forEach(function(d) { dSum[d] = 0; dFirst[d] = 0; });
+  allResponses.forEach(function(r) {
+    for (var i = 0; i < 3; i++) { var v = (r[6+i]||'').trim(); if (dSum[v] !== undefined) dSum[v] += (i+1); if (i === 0 && dFirst[v] !== undefined) dFirst[v]++; }
+  });
+  var dAvg = days.map(function(d) { return {name:d, avg:(dSum[d]/n).toFixed(2)}; });
+  dAvg.sort(function(a,b) { return a.avg - b.avg; });
+
+  document.getElementById('dayoffAvgChart').innerHTML = dAvg.map(function(d,i) {
+    return '<div class="bar-row"><span class="bar-label">' + d.name + '</span><div class="bar-wrap"><div class="bar-fill" style="width:' + ((1-(d.avg-1)/2)*100) + '%;background:' + colors[i] + '"></div><span class="bar-val">' + d.avg + '</span></div></div>';
+  }).join('');
+
+  document.getElementById('dayoffDistChart').innerHTML = days.map(function(d,i) {
+    return '<div class="dist-row"><span class="dist-label">' + d + '</span><div class="dist-wrap"><div class="dist-fill" style="width:' + (n>0?(dFirst[d]/n*100):0) + '%;background:' + colors[i] + '"></div></div><span class="dist-count">' + dFirst[d] + '</span></div>';
+  }).join('');
+
+  // Table
+  document.getElementById('respBody').innerHTML = allResponses.map(function(r) {
+    return '<tr><td style="font-weight:600">' + (r[1]||'') + '</td>' +
+      '<td><span class="chip" style="background:var(--pri-dim);color:var(--pri)">' + (r[2]||'') + '</span></td>' +
+      '<td>' + (r[3]||'') + '</td><td>' + (r[4]||'') + '</td><td>' + (r[5]||'') + '</td>' +
+      '<td><span class="chip" style="background:var(--info-dim);color:var(--info)">' + (r[6]||'') + '</span></td>' +
+      '<td>' + (r[7]||'') + '</td><td>' + (r[8]||'') + '</td>' +
+      '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-mut);font-size:12px">' + (r[9]||'') + '</td>' +
+      '<td style="font-size:11px;color:var(--text-mut);white-space:nowrap">' + (r[0]||'') + '</td></tr>';
+  }).join('');
+}
+
+// ── Export ──
+function exportCSV() {
+  if (allResponses.length === 0) { showToast('No data to export.', 'error'); return; }
+  var hdr = 'Timestamp,Name,Shift_1,Shift_2,Shift_3,Shift_4,DayOff_1,DayOff_2,DayOff_3,Notes';
+  var csv = [hdr].concat(allResponses.map(function(r) {
+    return r.map(function(c) { return '"' + (c||'').replace(/"/g, '""') + '"'; }).join(',');
+  })).join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'peak_preferences_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+
+// ── Init ──
+initDrag('shiftRank');
+initDrag('dayOffRank');
+var _cfgUrl = document.getElementById('cfgUrl');
+if (_cfgUrl) _cfgUrl.value = gasUrl;
+var _cfgSheet = document.getElementById('cfgSheet');
+if (_cfgSheet) _cfgSheet.value = sheetId;
+if (gasUrl) { var _banner = document.getElementById('setupBanner'); if (_banner) _banner.style.display = 'none'; }
+</script>
+</body>
+</html>
