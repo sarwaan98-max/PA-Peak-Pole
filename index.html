@@ -171,8 +171,8 @@ textarea{resize:vertical;min-height:80px}
     </div>
 
     <div class="section">
-      <div class="section-title">Extra Day Off Preference <span class="badge">Rank 1–3</span></div>
-      <p class="section-desc">Drag to reorder. #1 = your most preferred extra day off.</p>
+      <div class="section-title">Extra Day to Work <span class="badge">Rank 1–3</span></div>
+      <p class="section-desc">Drag to reorder. #1 = the day you most prefer to work extra. #3 = least preferred.</p>
       <ul class="rank-list" id="dayOffRank">
         <li class="rank-item" draggable="true" data-value="Sunday"><span class="drag-handle">⠿</span><span class="rank-num">1</span><span class="rank-label">Sunday</span></li>
         <li class="rank-item" draggable="true" data-value="Monday"><span class="drag-handle">⠿</span><span class="rank-num">2</span><span class="rank-label">Monday</span></li>
@@ -224,14 +224,14 @@ textarea{resize:vertical;min-height:80px}
     <div class="section">
       <div class="section-title">Individual Responses</div>
       <div style="overflow-x:auto;margin-top:12px">
-        <table class="rtable"><thead><tr><th>Name</th><th>Shift #1</th><th>Shift #2</th><th>Shift #3</th><th>Shift #4</th><th>Day #1</th><th>Day #2</th><th>Day #3</th><th>Notes</th><th>Time</th></tr></thead><tbody id="respBody"></tbody></table>
+        <table class="rtable"><thead><tr><th>Name</th><th>Shift #1</th><th>Shift #2</th><th>Shift #3</th><th>Shift #4</th><th>Work #1</th><th>Work #2</th><th>Work #3</th><th>Notes</th><th>Time</th></tr></thead><tbody id="respBody"></tbody></table>
       </div>
     </div>
     
     <div class="section"><div class="section-title">Shift Preference — Average Rankings</div><p class="section-desc">Lower = more preferred (1 = top choice)</p><div id="shiftAvgChart"></div></div>
     <div class="section"><div class="section-title">Shift — #1 Pick Distribution</div><div id="shiftDistChart" style="margin-top:12px"></div></div>
-    <div class="section"><div class="section-title">Day Off — Average Rankings</div><p class="section-desc">Lower = more preferred</p><div id="dayoffAvgChart"></div></div>
-    <div class="section"><div class="section-title">Day Off — #1 Pick Distribution</div><div id="dayoffDistChart" style="margin-top:12px"></div></div>
+    <div class="section"><div class="section-title">Extra Work Day — Average Rankings</div><p class="section-desc">Lower = more preferred</p><div id="dayoffAvgChart"></div></div>
+    <div class="section"><div class="section-title">Extra Work Day — #1 Pick Distribution</div><div id="dayoffDistChart" style="margin-top:12px"></div></div>
     
   </div>
 </div>
@@ -277,7 +277,7 @@ textarea{resize:vertical;min-height:80px}
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var data = JSON.parse(e.postData.contents);
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['Timestamp','Name','Shift_1','Shift_2','Shift_3','Shift_4','DayOff_1','DayOff_2','DayOff_3','Notes']);
+    sheet.appendRow(['Timestamp','Name','Shift_1','Shift_2','Shift_3','Shift_4','ExtraWorkDay_1','ExtraWorkDay_2','ExtraWorkDay_3','Notes']);
   }
   sheet.appendRow(data.values);
   return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
@@ -560,7 +560,7 @@ function renderResults() {
     return '<div class="dist-row"><span class="dist-label">' + s + '</span><div class="dist-wrap"><div class="dist-fill" style="width:' + (n>0?(sFirst[s]/n*100):0) + '%;background:' + colors[i] + '"></div></div><span class="dist-count">' + sFirst[s] + '</span></div>';
   }).join('');
 
-  // Day off averages
+  // Extra work day averages
   var dSum = {}, dFirst = {};
   days.forEach(function(d) { dSum[d] = 0; dFirst[d] = 0; });
   allResponses.forEach(function(r) {
@@ -592,7 +592,7 @@ function renderResults() {
 // ── Export ──
 function exportCSV() {
   if (allResponses.length === 0) { showToast('No data to export.', 'error'); return; }
-  var hdr = 'Timestamp,Name,Shift_1,Shift_2,Shift_3,Shift_4,DayOff_1,DayOff_2,DayOff_3,Notes';
+  var hdr = 'Timestamp,Name,Shift_1,Shift_2,Shift_3,Shift_4,ExtraWorkDay_1,ExtraWorkDay_2,ExtraWorkDay_3,Notes';
   var csv = [hdr].concat(allResponses.map(function(r) {
     return r.map(function(c) { return '"' + (c||'').replace(/"/g, '""') + '"'; }).join(',');
   })).join('\n');
