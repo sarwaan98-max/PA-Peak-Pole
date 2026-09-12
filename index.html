@@ -457,10 +457,7 @@ function submitSurvey() {
     } catch(e) { /* no-op */ }
   }
 
-  // Always save locally too
-  var local = JSON.parse(sGet('responses', '[]'));
-  local.push(row);
-  sSet('responses', JSON.stringify(local));
+  // Data saved to Google Sheet only — no local storage
 
   btn.disabled = false;
   btn.textContent = '\u{1F4E8} Submit Response';
@@ -497,9 +494,7 @@ function refreshResults() {
     } catch(e) { /* CORS or network error - ignore */ }
   }
 
-  // Also pull local
-  var local = JSON.parse(sGet('responses', '[]'));
-  allResponses = allResponses.concat(local);
+  // Results loaded from Google Sheet only
   renderResults();
 }
 
