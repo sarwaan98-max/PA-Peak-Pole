@@ -163,10 +163,10 @@ textarea{resize:vertical;min-height:80px}
       <div class="section-title">Shift Preference <span class="badge">Rank 1–4</span></div>
       <p class="section-desc">Drag to reorder. #1 = your most preferred shift.</p>
       <ul class="rank-list" id="shiftRank">
-        <li class="rank-item" draggable="true" data-value="Mor/Day"><span class="drag-handle">⠿</span><span class="rank-num">1</span><span class="rank-label">Morning / Day</span><span class="rank-times">~6:00a – 4:30p</span></li>
-        <li class="rank-item" draggable="true" data-value="Day/Twi"><span class="drag-handle">⠿</span><span class="rank-num">2</span><span class="rank-label">Day / Twilight</span><span class="rank-times">~12:00p – 10:30p</span></li>
-        <li class="rank-item" draggable="true" data-value="Twi/Nit"><span class="drag-handle">⠿</span><span class="rank-num">3</span><span class="rank-label">Twilight / Night</span><span class="rank-times">~6:00p – 4:30a</span></li>
-        <li class="rank-item" draggable="true" data-value="Nit/Mor"><span class="drag-handle">⠿</span><span class="rank-num">4</span><span class="rank-label">Night / Morning</span><span class="rank-times">~12:00a – 10:30a</span></li>
+        <li class="rank-item" draggable="true" data-value="MOR/DAY"><span class="drag-handle">⠿</span><span class="rank-num">1</span><span class="rank-label">MOR/DAY</span></li>
+        <li class="rank-item" draggable="true" data-value="DAY/TWI"><span class="drag-handle">⠿</span><span class="rank-num">2</span><span class="rank-label">DAY/TWI</span></li>
+        <li class="rank-item" draggable="true" data-value="TWI/NIT"><span class="drag-handle">⠿</span><span class="rank-num">3</span><span class="rank-label">TWI/NIT</span></li>
+        <li class="rank-item" draggable="true" data-value="NIT/SUN"><span class="drag-handle">⠿</span><span class="rank-num">4</span><span class="rank-label">NIT/SUN</span></li>
       </ul>
     </div>
 
@@ -221,16 +221,18 @@ textarea{resize:vertical;min-height:80px}
       <button class="btn btn-sec btn-sm" onclick="lockResults()">&#x1F512; Lock</button>
     </div>
     <div class="stats-grid" id="statsGrid"></div>
-    <div class="section"><div class="section-title">Shift Preference — Average Rankings</div><p class="section-desc">Lower = more preferred (1 = top choice)</p><div id="shiftAvgChart"></div></div>
-    <div class="section"><div class="section-title">Shift — #1 Pick Distribution</div><div id="shiftDistChart" style="margin-top:12px"></div></div>
-    <div class="section"><div class="section-title">Day Off — Average Rankings</div><p class="section-desc">Lower = more preferred</p><div id="dayoffAvgChart"></div></div>
-    <div class="section"><div class="section-title">Day Off — #1 Pick Distribution</div><div id="dayoffDistChart" style="margin-top:12px"></div></div>
     <div class="section">
       <div class="section-title">Individual Responses</div>
       <div style="overflow-x:auto;margin-top:12px">
         <table class="rtable"><thead><tr><th>Name</th><th>Shift #1</th><th>Shift #2</th><th>Shift #3</th><th>Shift #4</th><th>Day #1</th><th>Day #2</th><th>Day #3</th><th>Notes</th><th>Time</th></tr></thead><tbody id="respBody"></tbody></table>
       </div>
     </div>
+    
+    <div class="section"><div class="section-title">Shift Preference — Average Rankings</div><p class="section-desc">Lower = more preferred (1 = top choice)</p><div id="shiftAvgChart"></div></div>
+    <div class="section"><div class="section-title">Shift — #1 Pick Distribution</div><div id="shiftDistChart" style="margin-top:12px"></div></div>
+    <div class="section"><div class="section-title">Day Off — Average Rankings</div><p class="section-desc">Lower = more preferred</p><div id="dayoffAvgChart"></div></div>
+    <div class="section"><div class="section-title">Day Off — #1 Pick Distribution</div><div id="dayoffDistChart" style="margin-top:12px"></div></div>
+    
   </div>
 </div>
 
@@ -537,7 +539,7 @@ function renderResults() {
     return;
   }
 
-  var shifts = ['Mor/Day','Day/Twi','Twi/Nit','Nit/Mor'];
+  var shifts = ['MOR/DAY','DAY/TWI','TWI/NIT','NIT/SUN'];
   var days = ['Sunday','Monday','Tuesday'];
   var colors = ['#7c6aff','#60a5fa','#4ade80','#fbbf24'];
 
